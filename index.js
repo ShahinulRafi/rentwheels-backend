@@ -61,6 +61,27 @@ async function run() {
       res.send(result);
     })
     
+    //Update booking
+    app.put('/update/:id', async(req, res) => {
+      const updatedBooking = req.body;
+      const id = req.params;
+      console.log('updating booking', updatedBooking);
+      const query = {_id: new ObjectId(id)};
+      const updateBooking = {
+        $set: updatedBooking
+      }
+      const result = await carServices.updateOne(query, updateBooking);
+      res.send(result);
+    })
+
+    //delete
+    app.delete('/delete/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await carServices.deleteOne(query);
+      res.send(result);
+    })
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
