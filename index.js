@@ -24,6 +24,7 @@ async function run() {
     
     const database = client.db("carRental");
     const carServices = database.collection("services")
+    const bookingsCollection = database.collection("bookings");
 
     app.post('/cars', async (req, res) => {
         const car = req.body;
@@ -34,7 +35,12 @@ async function run() {
 
     //get services from data
     app.get('/services', async(req, res) => {
-      const result = await carServices.find().toArray();
+      const {category} = req.query;
+      const query = {};
+      if(category){
+        query.category = category;
+      }
+      const result = await carServices.find(query).toArray();
       res.send(result);
     })
 
@@ -45,6 +51,14 @@ async function run() {
     //     res.send(result);
     // })
 
+    app.get('/myListings/:id', async(req, res) => {
+        const id = req.params.id;
+        console.log('getting specific listing', id);
+        const query = {_id: new ObjectId(id)};
+        console.log(query);
+        const result = await carServices.findOne(query);
+        res.send(result);
+    })
     app.get('/myBookings/:id', async(req, res) => {
         const id = req.params.id;
         console.log('getting specific booking', id);
@@ -54,23 +68,29 @@ async function run() {
         res.send(result);
     })
 
-    app.get('/myBookings', async (req, res) => {
+    app.get('/myListings', async (req, res) => {
       const {email} = req.query;
       const query = {email: email}
       const result = await carServices.find(query).toArray();
       res.send(result);
     })
+    // app.get('/myBookings', async (req, res) => {
+    //   const {email} = req.query;
+    //   const query = {email: email}
+    //   const result = await carServices.find(query).toArray();
+    //   res.send(result);
+    // })
     
     //Update booking
     app.put('/update/:id', async(req, res) => {
-      const updatedBooking = req.body;
+      const updatedListing = req.body;
       const id = req.params;
-      console.log('updating booking', updatedBooking);
+      console.log('updating listing', updatedListing);
       const query = {_id: new ObjectId(id)};
-      const updateBooking = {
-        $set: updatedBooking
+      const updateListing = {
+        $set: updatedListing
       }
-      const result = await carServices.updateOne(query, updateBooking);
+      const result = await carServices.updateOne(query, updateListing);
       res.send(result);
     })
 
@@ -81,7 +101,15 @@ async function run() {
       const result = await carServices.deleteOne(query);
       res.send(result);
     })
-    
+
+    //post a order/booking
+    app.post('/bookings', async(req, res) => {
+      const data = req.body;
+      console.log("booking data: ", data);
+
+      const result = await bookingsCollection.insertOne(data);
+      res.send(result);
+    })
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
