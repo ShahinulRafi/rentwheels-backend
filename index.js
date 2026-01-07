@@ -1,7 +1,7 @@
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
 const port = process.env.PORT || 3000;
 
 const app = express();
@@ -15,34 +15,49 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
     await client.connect();
-    
+
     const database = client.db("carRental");
-    const carServices = database.collection("services")
+    const carServices = database.collection("services");
     const bookingsCollection = database.collection("bookings");
 
-    app.post('/cars', async (req, res) => {
-        const car = req.body;
-        console.log(car);
-        const result = await carServices.insertOne(car);
-        res.send(result);
-    })
+    app.post("/cars", async (req, res) => {
+      const car = req.body;
+      console.log(car);
+      const result = await carServices.insertOne(car);
+      res.send(result);
+    });
 
     //get services from data
-    app.get('/services', async(req, res) => {
-      const {category} = req.query;
+    app.get("/services", async (req, res) => {
+      const { category } = req.query;
       const query = {};
-      if(category){
+      if (category) {
         query.category = category;
       }
       const result = await carServices.find(query).toArray();
       res.send(result);
-    })
+    });
+
+    //Featured Cars
+    app.get("/featured", async (req, res) => {
+      const { category } = req.query;
+      const query = {};
+      if (category) {
+        query.category = category;
+      }
+      const result = await carServices
+        .find(query)
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
 
     // app.get('/services/:id', async(req, res) => {
     //     const id = req.params.id;
@@ -51,78 +66,85 @@ async function run() {
     //     res.send(result);
     // })
 
-    app.get('/myListings/:id', async(req, res) => {
-        const id = req.params.id;
-        console.log('getting specific listing', id);
-        const query = {_id: new ObjectId(id)};
-        console.log(query);
-        const result = await carServices.findOne(query);
-        res.send(result);
-    })
-    app.get('/myBookings/:id', async(req, res) => {
-        const id = req.params.id;
-        console.log('getting specific booking', id);
-        const query = {_id: new ObjectId(id)};
-        console.log(query);
-        const result = await carServices.findOne(query);
-        res.send(result);
-    })
+    app.get("/myListings/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("getting specific listing", id);
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const result = await carServices.findOne(query);
+      res.send(result);
+    });
+    app.get("/myBookings/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log("getting specific booking", id);
+      const query = { _id: new ObjectId(id) };
+      console.log(query);
+      const result = await carServices.findOne(query);
+      res.send(result);
+    });
 
-    app.get('/myListings', async (req, res) => {
-      const {email} = req.query;
-      const query = {email: email}
+    app.get("/myListings", async (req, res) => {
+      const { email } = req.query;
+      const query = { email: email };
       const result = await carServices.find(query).toArray();
       res.send(result);
-    })
+    });
     // app.get('/myBookings', async (req, res) => {
     //   const {email} = req.query;
     //   const query = {email: email}
     //   const result = await carServices.find(query).toArray();
     //   res.send(result);
     // })
-    
+
     //Update booking
-    app.put('/update/:id', async(req, res) => {
+    app.put("/update/:id", async (req, res) => {
       const updatedListing = req.body;
       const id = req.params;
-      console.log('updating listing', updatedListing);
-      const query = {_id: new ObjectId(id)};
+      console.log("updating listing", updatedListing);
+      const query = { _id: new ObjectId(id) };
       const updateListing = {
-        $set: updatedListing
-      }
+        $set: updatedListing,
+      };
       const result = await carServices.updateOne(query, updateListing);
       res.send(result);
-    })
+    });
 
     //delete
-    app.delete('/delete/:id', async(req, res) => {
+    app.delete("/delete/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await carServices.deleteOne(query);
       res.send(result);
-    })
+    });
 
     //post a order/booking
-    app.post('/bookings', async(req, res) => {
+    app.post("/bookings", async (req, res) => {
       const data = req.body;
       console.log("booking data: ", data);
 
       const result = await bookingsCollection.insertOne(data);
       res.send(result);
-    })
+    });
+
+    //get bookings/orders
+    app.get("/bookings", async (req, res) => {
+      const result = await bookingsCollection.find().toArray();
+      res.send(result);
+    });
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // await client.close();
   }
 }
 run().catch(console.dir);
 
-
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
-})
+app.get("/", (req, res) => {
+  res.send("Hello, World!");
+});
 
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-})
+  console.log(`Server is running on port ${port}`);
+});
