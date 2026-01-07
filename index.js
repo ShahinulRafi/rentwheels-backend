@@ -118,6 +118,13 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/delete/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingsCollection.deleteOne(query);
+      res.send(result);
+    });
+
     //post a order/booking
     app.post("/bookings", async (req, res) => {
       const data = req.body;
@@ -129,10 +136,16 @@ async function run() {
 
     //get bookings/orders
     app.get("/bookings", async (req, res) => {
-      const {email} = req.query;
+      const {id, email} = req.query;
       if(!email) return res.send([]);
-
-      const bookings = await bookingsCollection.find({ renterEmail : email }).toArray();
+      
+      //check if already booked
+      const existing = await bookingsCollection.findOne({ renterEmail : email, productId: id });
+      if(existing){
+        return res.send([existing]);
+      }
+      
+      const bookings = await bookingsCollection.find({ renterEmail : email, productId: id }).toArray();
       res.send(bookings);
     });
     // app.get("/bookings/:email", async (req, res) => {
