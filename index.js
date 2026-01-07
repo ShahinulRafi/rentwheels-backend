@@ -74,6 +74,7 @@ async function run() {
       const result = await carServices.findOne(query);
       res.send(result);
     });
+
     app.get("/myBookings/:id", async (req, res) => {
       const id = req.params.id;
       console.log("getting specific booking", id);
@@ -128,9 +129,37 @@ async function run() {
 
     //get bookings/orders
     app.get("/bookings", async (req, res) => {
-      const result = await bookingsCollection.find().toArray();
-      res.send(result);
+      const {email} = req.query;
+      if(!email) return res.send([]);
+
+      const bookings = await bookingsCollection.find({ renterEmail : email }).toArray();
+      res.send(bookings);
     });
+    // app.get("/bookings/:email", async (req, res) => {
+    //   const {email} = req.params;
+    //   const query = { renterEmail : email };
+    //   const result = await bookingsCollection.findOne(query).toArray();
+    //   res.send(result);
+    // });
+    
+    
+    //get distinct bookings/orders
+    // app.get("/bookings/car/:carId", async (req, res) => {
+    //   const carId = req.params.id;
+
+    //   try{
+    //     const booking = await bookingsCollection.findOne({ productId: carId});
+
+    //     res.send(booking);
+    //   }
+    //   catch(err)
+    //   {
+    //     console.error(err);
+    //     res.status(500).send({message: 'Internal Server Error'});
+    //   }
+    // });
+
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
