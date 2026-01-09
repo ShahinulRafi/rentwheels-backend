@@ -5,7 +5,16 @@ require("dotenv").config();
 const port = process.env.PORT || 3000;
 
 const app = express();
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://rentwheels-frontend.netlify.app", // frontend production URL
+      "http://localhost:5173", // local dev
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
@@ -161,14 +170,12 @@ async function run() {
 
     //bookings with unique id
     app.get("/bookingscheck", async (req, res) => {
-      const {id} = req.query;
+      const { id } = req.query;
       let query = {};
-      if(id){
-        query = { productId: id};
+      if (id) {
+        query = { productId: id };
       }
-      const bookings = await bookingsCollection
-        .find(query)
-        .toArray();
+      const bookings = await bookingsCollection.find(query).toArray();
       res.send(bookings);
     });
     // app.get("/bookings/:email", async (req, res) => {
