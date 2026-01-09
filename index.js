@@ -5,16 +5,16 @@ require("dotenv").config();
 const port = process.env.PORT || 3000;
 
 const app = express();
-// app.use(cors());
-app.use(
-  cors({
-    origin: [
-      "https://rentwheels-frontend.netlify.app", // frontend production URL
-      "http://localhost:5173", // local dev
-    ],
-    credentials: true,
-  })
-);
+app.use(cors());
+// app.use(
+//   cors({
+//     origin: [
+//       "https://rentwheels-frontend.netlify.app", // frontend production URL
+//       "http://localhost:5173", // local dev
+//     ],
+//     credentials: true,
+//   })
+// );
 app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
@@ -215,6 +215,6 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
