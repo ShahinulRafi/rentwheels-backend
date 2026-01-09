@@ -128,24 +128,45 @@ async function run() {
     //post a order/booking
     app.post("/bookings", async (req, res) => {
       const data = req.body;
+      const { productId: id } = data;
       console.log("booking data: ", data);
-
+      const existing = await bookingsCollection.findOne({ productId: id });
+      console.log("existing booking: ", existing);
+      if (existing) {
+        console.log("Booking already exists for this productId:", id);
+        return res.status(409).send({
+          success: false,
+          message: "This car is already booked",
+        });
+      }
+      console.log("after the block");
       const result = await bookingsCollection.insertOne(data);
-      res.send(result);
+      res.status(201).send({
+        success: true,
+        message: "Booking successful",
+        insertedId: result.insertedId,
+      });
     });
 
-    //get bookings/orders
+    //get bookings/orders for a person
+    app.get("/mybookings", async (req, res) => {
+      const { email } = req.query;
+      if (!email) return res.send([]);
+
+      const bookings = await bookingsCollection
+        .find({ renterEmail: email })
+        .toArray();
+      res.send(bookings);
+    });
+
+    //bookings with unique id
     app.get("/bookings", async (req, res) => {
-      const {id, email} = req.query;
-      if(!email) return res.send([]);
-      
-      //check if already booked
-      const existing = await bookingsCollection.findOne({ renterEmail : email, productId: id });
-      if(existing){
-        return res.send([existing]);
-      }
-      
-      const bookings = await bookingsCollection.find({ renterEmail : email, productId: id }).toArray();
+      const { id } = req.query;
+      if (!id) return res.send([]);
+
+      const bookings = await bookingsCollection
+        .find({ productId: id })
+        .toArray();
       res.send(bookings);
     });
     // app.get("/bookings/:email", async (req, res) => {
@@ -154,8 +175,7 @@ async function run() {
     //   const result = await bookingsCollection.findOne(query).toArray();
     //   res.send(result);
     // });
-    
-    
+
     //get distinct bookings/orders
     // app.get("/bookings/car/:carId", async (req, res) => {
     //   const carId = req.params.id;
@@ -171,7 +191,6 @@ async function run() {
     //     res.status(500).send({message: 'Internal Server Error'});
     //   }
     // });
-
 
     await client.db("admin").command({ ping: 1 });
     console.log(
