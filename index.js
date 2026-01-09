@@ -160,12 +160,14 @@ async function run() {
     });
 
     //bookings with unique id
-    app.get("/bookings", async (req, res) => {
-      const { id } = req.query;
-      if (!id) return res.send([]);
-
+    app.get("/bookingscheck", async (req, res) => {
+      const {id} = req.query;
+      let query = {};
+      if(id){
+        query = { productId: id};
+      }
       const bookings = await bookingsCollection
-        .find({ productId: id })
+        .find(query)
         .toArray();
       res.send(bookings);
     });
